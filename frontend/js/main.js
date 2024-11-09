@@ -1,8 +1,8 @@
 // Main.js handles js form interactions and then API calls
-
 function navigateTo(page) {
     window.location.href = `${page}.html`;
   }
+
 
 let selectedOptions = [];
 
@@ -18,9 +18,11 @@ function saveSelections() {
 
 
 document.addEventListener("DOMContentLoaded", () =>{
+    const uploadButton = document.getElementById("uploadButton");
     if(uploadButton){
         uploadButton.addEventListener("click",() =>{
-            navigateTo(upload)
+            saveSelections();
+            navigateTo("upload")
         })
     }
 
