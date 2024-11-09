@@ -1,8 +1,8 @@
 // Main.js handles js form interactions and then API calls
-
 function navigateTo(page) {
     window.location.href = `${page}.html`;
   }
+
 
 let selectedOptions = [];
 
