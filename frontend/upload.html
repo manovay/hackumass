@@ -1,1 +1,19 @@
 <!-- An upload page, user uploads file here. Supposedly, there is a way to just upload files using html?  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload Example</title>
+</head>
+<body style="background: blanchedalmond;"">
+    
+    <h1 style = "text-align: center; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; color: brown;">Upload a File for Editing!!</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <label for="fileInput">Choose a file:</label>
+        <input type="file" id="fileInput" name="file">
+        <button type="submit">Upload Your File!</button>
+    </form>
+</body>
+</html>
