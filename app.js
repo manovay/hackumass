@@ -1,4 +1,5 @@
 // Sets up the Express server
+// recieves file and upload request, sends to aws using dataController.js and s3.js
 require('dotenv').config();
 const express = require ('express');
 const cors = require('cors');

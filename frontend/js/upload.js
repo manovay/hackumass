@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
         data.append("file",fileInput.files[0]);
         
         try{
+            // when upload submitted, file sends to backend by API request, moves to result.html
             navigateTo("result");
             const response = await fetch("/api/upload", {method:"POST", body:data });
             if (response.ok){

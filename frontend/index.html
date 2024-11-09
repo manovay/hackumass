@@ -2,6 +2,8 @@
  for now, just make 2-3 options for a checklist -->
  <!--  Main html page - landing page kinda, I want there to be a form here which has checklist options where someone can select what sorta data cleaning they want (outliers, dropna, etc.)
  for now, just make 2-3 options for a checklist -->
+
+ <!-- starting page, user can select from data cleaning checklist, then select upload (-> upload.html) -->
  <!DOCTYPE html>
  <html lang="en">
  <head>
@@ -43,8 +45,9 @@
      </style>
  </head>
  <body>
-    <!-- make these all class = option, so that we can actually put in local storage! -->
      <h1>How would you like to clean your data?</h1>
+     <!-- user's data manipulation options - checklist, selecting upload will save in local storage-->
+     <!-- **make these all class = option, so that we can actually put in local storage** -->
      <div class="checklist">
          <label>
              <input type="checkbox" name="cleaning-option" value="remove-na">
@@ -70,5 +73,3 @@
      <button id="uploadButton">Upload</button>
  </body>
  </html>
-<!-- Main html page - landing page kinda, I want there to be a form here which has checklist options where someone can select what sorta data cleaning they want (outliers, dropna, etc.)
- for now, just make 2-3 options for a checklist -->
