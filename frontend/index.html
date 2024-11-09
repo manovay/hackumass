@@ -1,2 +1,60 @@
-<!--  Main html page - landing page kinda, I want there to be a form here which has checklist options where someone can select what sorta data cleaning they want (outliers, dropna, etc.)
+<!-- Main html page - landing page kinda, I want there to be a form here which has checklist options where someone can select what sorta data cleaning they want (outliers, dropna, etc.)
  for now, just make 2-3 options for a checklist -->
+
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Data Cleaning</title>
+     <link rel="stylesheet" href="css/styles.css">
+     <style>
+         body {
+             font-family: Arial, sans-serif;
+             display: flex;
+             flex-direction: column;
+             align-items: center;
+             justify-content: center;
+             height: 100vh;
+             margin: 0;
+         }
+         h1 {
+             font-size: 2rem;
+             margin-bottom: 60px;
+         }
+         .checklist {
+             display: flex;
+             justify-content: space-between;
+             width: 60%;
+             gap: 20px;
+         }
+         .checklist label {
+             font-size: 1.5rem;
+             display: flex;
+             align-items: center;
+         }
+         .checklist input {
+             width: 25px;
+             height: 25px;
+             margin-right: 10px;
+         }
+     </style>
+ </head>
+ <body>
+     <h1>How would you like to clean your data?</h1>
+     <div class="checklist">
+         <label>
+             <input type="checkbox" name="cleaning-option" value="remove-na">
+             Remove NA's
+         </label>
+         <label>
+             <input type="checkbox" name="cleaning-option" value="standardize">
+             Standardize data
+         </label>
+         <label>
+             <input type="checkbox" name="cleaning-option" value="remove-outliers">
+             Remove outliers
+         </label>
+     </div>
+ </body>
+ </html>
