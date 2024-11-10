@@ -1,67 +1,101 @@
-// Upload file to S3, trigger DataBricks, retrieve cleaned data
-const {uploads3, downloads3 } = require ('../services/s3');
-const {trigger} = require('../services/databricks');
-let latestFilePath = null; 
+// uploads file to s3, triggers databricks and then retrieves the cleaned data
 
+const { uploads3, downloads3 } = require('../services/s3'); //functions from s3 file
+const { trigger, checkStatus } = require('../services/databricks'); //functions to call databricks
+require('dotenv').config(); //loads variables
+const sgMail = require('@sendgrid/mail'); //imports sendgrid - what we use for mailing
+sgMail.setApiKey(process.env.SENDGRID_API_KEY); // sets API Key - was running into issues without this, "Key needs to start with 'SG.' "
 
-exports.uploadFile = async (req, res) =>{
-    const file = req.file;
-    const selectedOptions = JSON.parse(req.body.selectedOptions);
+// Function to upload file, trigger Databricks job, and handle email notification
+exports.uploadAndProcessFile = async (req, res) => {
+    const { email } = req.body; // store user's email from the request
+    const file = req.file; //get the uploaded file from the request
 
-    try{
+    try {
+        console.log("Received file upload request:", file);
+
+        // Upload file to S3
         const S3FilePath = await uploads3(file);
-        console.log("File uploaded to S3:", S3FilePath);
-        const databricksResponse = await trigger(S3FilePath, selectedOptions);
+        console.log("File successfully uploaded to S3", S3FilePath);
 
-        if(databricksResponse.success){
-            console.log("databricks has recieved file. ");
-            latestFilePath = S3FilePath;
-            res.json({message: 'File is being processed'});
+        // Trigger Databricks job
+        const databricksResponse = await trigger(S3FilePath, req.body.selectedOptions);
+        if (databricksResponse.success) {
+            console.log("Databricks job started. Run ID:", databricksResponse.runId);
+
+            // Poll for job completion and send email
+            await pollForCompletion(databricksResponse.runId, S3FilePath, email);
+            res.json({ message: 'File being cleaned ! You will receive an email once complete (3-5 minutes) ', runId: databricksResponse.runId });
+
+
+        } else {
+            console.error("Failed to process with DataBricks ", databricksResponse);
+            res.status(500).json({ message: 'Failed to process with DataBricks' });
         }
-        else{
-            res.status(500).json({message:' Failed with connecting to Databricks'});
 
+
+    } catch (error) {
+        console.error("Error in upload/cleaning function:", error);
+        res.status(500).json({ message: 'Error in upload/cleaning function:' });
+    }
+};
+
+// Polling function to check job completion and send email, necesary as we want to wait before we display the download link
+async function pollForCompletion(runId, filePath, email) {
+    const pollInterval = 15000; // Poll every 15 seconds
+    const maxAttempts = 40; //Maxes at 6 minutes - Highest it every took was 5:30 
+    let attempts = 0;
+
+    console.log("Polling the job ");
+    console.log("User email:", email);
+
+    while (attempts < maxAttempts) {
+      // polls the 
+        try {
+            console.log(`Polling attempt #${attempts + 1}...`);
+            const { lifeCycleState, resultState } = await checkStatus(runId);
+
+            if (lifeCycleState === "TERMINATED") {
+                if (resultState === "SUCCESS") {
+                    // Generate the download link and send email
+                    const downloadLink = await downloads3(filePath.replace("uploads/", "processed/"));
+                    await sendCompletionEmail(downloadLink, email);
+                    console.log("Job completed successfully. Email sent to:", email);
+                    return;
+                } else {
+                    console.error("Databricks job failed.");
+                    return;
+                }
+            }
+            console.log("Job still running - Checking again in 15 seconds");
+            
+            await new Promise(resolve => setTimeout(resolve, pollInterval)); //sets the 15 second timer 
+            
+            attempts++;
+
+        } catch (error) {
+            console.error("Error during job polling:", error);
+            return;
         }
     }
-    catch(error)
-{
-    console.error("Error uploading or processing file with s3, databaricks", error);
-    res.status(500).json({message: 'an error occurred'});
+    console.error("Timed out after 6 minutes :( ");
+}
 
-}};
-
-
-exports.getCleanedData = async (req, res) => {
-    const maxAttempts = 10; // Maximum polling attempts
-    const pollInterval = 3000; // Polling interval in milliseconds (3 seconds)
-  
-    let attempts = 0;
-  
-    const checkForFile = async () => {
-      try {
-        if (latestFilePath) { 
-          console.log("retrieving file");
-          const processedFilename = latestFilePath.replace("uploads/", "processed/");
-          const cleanedURL = await downloads3(processedFilename);
-          console.log("download link acquired");
-          console.log("Download Link:", cleanedURL)
-          latestFilePath = null; // Reset for next upload
-          res.json({ cleanedURL }); 
-        } else {
-          attempts++;
-          if (attempts < maxAttempts) {
-            console.log(`File not ready, attempt ${attempts}, trying again in ${pollInterval / 1000} seconds...`);
-            setTimeout(checkForFile, pollInterval); // Retry after the interval
-          } else {
-            console.error("Error: Max polling attempts reached.");
-            res.status(500).json({ message: "File processing timed out. Please try again later." });
-          }
-        }
-      } catch (error) {
-        console.error("Error with retrieving cleaned data", error);
-        res.status(500).json({ message: "Error retrieving cleaned file" });
-      }
+// Function to send the email with the download link
+async function sendCompletionEmail(downloadLink, email) {
+    const msg = {
+        to: email,
+        from: 'bandopusher9k@gmail.com',   // my email - not too professional, whoops 
+        subject: 'Your File is Ready for Download',
+        //formats the email all nice
+        text: `Thank you for using Scrub Data! Your file has been processed and is ready for download: ${downloadLink}`,
+        html: `<p>Thank you for using Scrub Data!  Your file has been processed and is ready for download: <a href="${downloadLink}">Download it here</a>.</p>`,
     };
-  
-    checkForFile(); // Start the polling process
-  };
+    // tries to send mail
+    try {
+        await sgMail.send(msg);
+        console.log("Email sent to:", email);
+    } catch (error) {
+        console.error("Error sending email:", error);
+    }
+}

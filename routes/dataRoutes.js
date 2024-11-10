@@ -1,14 +1,15 @@
-// Routes for fileupload, databricks trigger, and retrieving the download
+// import necesisities
 const express = require('express');
 const multer = require('multer');
 const router = express.Router();
-const controller = require('../controllers/dataCOntroller');
+const controller = require('../controllers/dataController');
 
-const upload = multer({ dest: 'uploads/'});
+//store uploaded files in uploads directory
+const upload = multer({ dest: 'uploads/' });
 
-router.post('/upload', upload.single('file'), controller.uploadFile);
+// Updated route to accept email and process file
+router.post('/upload', upload.single('file'), controller.uploadAndProcessFile);
 
 
-router.get('/download', controller.getCleanedData);
-
+//export router to be used elswhere 
 module.exports = router;
