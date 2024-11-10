@@ -28,8 +28,9 @@ exports.uploads3 = async (file) => {
 exports.downloads3 = async (filename) => {
     const params = {
         Bucket: process.env.S3_BUCKET_NAME,
-        Key: 'processed/' + Date.now() + '_' + filename,
+        Key: filename,
+        Expires: 3600
     };
-
+    
     return s3.getSignedUrlPromise('getObject', params);
 };
