@@ -3,26 +3,26 @@
 const axios = require('axios');
 
 exports.trigger = async(s3FilePath, options) =>{
-    try{
-        const response = await axios.post( 'https://<databricks-instance>/api/2.0/jobs/run-now', 
-            {
-                job_id: process.env.DATABRICKS_JOB_ID,
-                notebook_params: {
-                    file_path: s3FilePath,
-                    options: JSON.stringify(options)
-                }
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${process.env.DATABRICKS_TOKEN}`
-                }
-            }
+    const url = `${process.env.DATABRICKS_HOST}/api/2.0/jobs/run-now`;
+    const headers = {
+        Authorization: `Bearer ${process.env.DATABRICKS_TOKEN}`,
+        'Content-Type': 'application/json'
+    };
 
-        );
-    return {success: response.status ==200 };
-}
-catch(error){
-    console.error("Error with triggering databricks,", error);
-    return{success:false};
-}
-}
+    const data = {
+        job_id: process.env.DATABRICKS_JOB_ID,
+        notebook_params: {file_path: s3FilePath,options: JSON.stringify(options)
+        }
+    };
+
+    try {
+        const response = await axios.post(url, data, { headers });
+        return { success: true, runId: response.data.run_id };
+        
+    } 
+    
+    catch (error) {
+        console.error("Error triggering Databricks job:", error);
+        return { success: false, error };
+    }
+};

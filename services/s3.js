@@ -12,22 +12,23 @@ const s3 = new AWS.S3({
 });
 
 exports.uploads3 = async (file) => {
+    loc = 'uploads/' + Date.now() + '_' + file.originalname;
     const data = fs.readFileSync(file.path);
     const params = {
         Bucket: process.env.S3_BUCKET_NAME,
-        Key:'uploads/' + Date.now() + '_' + file.originalname,  // makes so that each file is original named
+        Key: loc,  // makes so that each file is original named
         Body: data
     }
 
 
     const result = await s3.upload(params).promise();
-    return result.location;
+    return loc;
 };
 
 exports.downloads3 = async (filename) => {
     const params = {
         Bucket: process.env.S3_BUCKET_NAME,
-        Key: 'processed/${filename}'   
+        Key: 'processed/' + Date.now() + '_' + filename,
     };
 
     return s3.getSignedUrlPromise('getObject', params);
